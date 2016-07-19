@@ -116,7 +116,60 @@ quedando arriba el servidor de MariaDB
 
 
 
+################# Servidor SSH y FTP ###############################
 
+# DESCARGAMOS EL CONTENEDOR DE CENTOS6 CON SSH PRECONFIGURADO
+docker pull centos6-ssh
+
+# SE INICIA EL PRIMER CONTENEDOR, CON LAS OPCIONES i=interactive, t=tty y -p= para activar el puerto 21 para ftp, EL COMANDO DE INCIO ES BASH.
+docker run -it -p 21 centos6-ssh /bin/bash
+
+# NOTA: SI TU EQUIPO SALE A TREVEZ DE UN PROXY, AGREGA TU PROXY EN EL ARCHIVO /etc/yum.conf
+echo "proxy=http://proxy-us.intel.com:911" >> /etc/yum.conf
+
+# SE CAMBIA EL PASSWORD DE ROOT
+passwd root
+
+# INICIAMOS EL SERVICIO SSH
+service sshd start
+
+# DESCARGAMOS EL SERVICIO DE FTP PARA CENTOS 6
+yum install -y vsftpd
+
+# INICIAMOS EL SERVICIO SSH
+service vsftpd start
+
+# SE PUEDE CONFIGURAR PARA QUE EL SERVICIO SE INICIE CUANDO ARRANCA EL OS
+chkconfig --level 345 vsftpd  on
+chkconfig --level 345 sshd on
+
+# POR SEGURIDAD SE RECOMIENDA DESHABILITAR LA CUENTA DE ANONYMOUS Y DESCOMENTAR UNAS LINEAS 
+vi /etc/vsftpd/vsftpd.confg
+
+BUSCA LA LINEA anonymous_enable y cambia "YES" por "NO"
+BUSCA LA LINEA local_enable=YES y se quitan los comentarios
+BUSCA LA LINEA write_enable=YES y se quitan los comentarios
+# SI SE BUSCA LIMITAR A LOS USUARIOS A SOLO UTILIZAR SU DIRECTORIO SE DESCOMENTA LA LINEA
+chroot_local_user=YES
+
+# SE CREA EL DIRECTORIO DONDE VA A TRABAJAR FTP
+mkdir /ftp
+
+# SE CREA EL O LOS USUARIOS QUE VAN A USAR FTP 
+useradd -d /ftp/miguel
+passwd miguel
+useradd -d /ftp/pedro
+passwd pedro
+
+# SE REINICIA EL SERVICIO
+service vsftpd restart
+
+# PARA PROBAR AL ACCESO AL SERVIDOR FTP, DESDE UN NAVEGADOR O CON EL CLIENTE DE FTP
+ftp 172.17.0.3:21
+
+###### NOTA: El demonio de docker por default habilita la opcion de poderse comunicar los contenedores, si se quiere restringir esta opcion 
+se cambia la opcion icc a "false": 
+--icc=true  Habilita la comunicacion entre contenedores
 
 
 
